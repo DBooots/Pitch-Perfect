@@ -21,7 +21,7 @@ namespace PitchPerfect
         private bool modeLoaded = false;
         private bool initComplete = false;
 
-        private PropControlMode mode = PropControlMode.MaxThrust;
+        private PropControlMode mode = PropControlMode.Proportional;
         public PropControlMode Mode
         {
             get => mode;
@@ -72,7 +72,7 @@ namespace PitchPerfect
 
         [KSPField(isPersistant = false, guiActive = true, guiActiveEditor = true, guiName = "Propeller Target")]
         [UI_ChooseOption(affectSymCounterparts = UI_Scene.All, options = new string[] { "Off", "Thrust", "Throttle", "Efficiency" }, scene = UI_Scene.All, suppressEditorShipModified = true)]
-        public int modeOptionField = 1;
+        public int modeOptionField = 2;
 
         [KSPField(isPersistant = true, advancedTweakable = true, guiActiveEditor = true, guiName = "Compensation for controls")]
         [UI_Toggle(affectSymCounterparts = UI_Scene.All, scene = UI_Scene.Editor, disabledText = "Decrease Lift", enabledText = "Increase Lift")]
