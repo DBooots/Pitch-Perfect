@@ -190,6 +190,10 @@ namespace PitchPerfect
                 return;
             }
 
+#if ENABLE_PROFILER
+            UnityEngine.Profiling.Profiler.BeginSample("ModulePropController.FixedUpdate()");
+#endif
+
             if (autofeather)
             {
                 if (!isAutoFeathering && (!rotor.servoMotorIsEngaged || rotor.rpmLimit == 0 || rotor.maxTorque == 0 || rotor.servoIsLocked))
@@ -215,10 +219,17 @@ namespace PitchPerfect
                 InitSurfaces();
                 SetBladeAngles();
             }
+
+#if ENABLE_PROFILER
+            UnityEngine.Profiling.Profiler.EndSample();
+#endif
         }
 
         protected void SetBladeAngles()
         {
+#if ENABLE_PROFILER
+            UnityEngine.Profiling.Profiler.BeginSample("ModulePropController.SetBladeAngles()");
+#endif
             // For 'realism' we only take the inflow velocity normal to the propeller disc.
             // For propellers, this averages out the target angle around the circle so that
             // the target angle is a function only of forward speed and RPM.
@@ -315,10 +326,19 @@ namespace PitchPerfect
                 //else
                 //    Debug.Log("PropControl couldn't set a reasonable angle.");
             }
+#if ENABLE_PROFILER
+            UnityEngine.Profiling.Profiler.EndSample();
+#endif
         }
 
         protected void InitSurfaces()
         {
+#if ENABLE_PROFILER
+            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
+            UnityEngine.Profiling.Profiler.BeginSample("ModulePropController.InitSurfaces()");
+#endif
+
             surfaces.Clear();
 
             List<ModuleControlSurface> ctrlSurfaces = part.children
@@ -347,6 +367,11 @@ namespace PitchPerfect
                     }
                 }
             }
+#if ENABLE_PROFILER
+            UnityEngine.Profiling.Profiler.EndSample();
+            timer.Stop();
+            Debug.LogFormat("PropControl: Initialize Time: {0}", timer.Elapsed.TotalMilliseconds);
+#endif
         }
 
         public override void OnAwake()

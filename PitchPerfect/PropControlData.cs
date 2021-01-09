@@ -36,10 +36,6 @@ namespace PitchPerfect
 
         public PropControlData(ModuleControlSurface surface, Vector3 axis, Vector3 rotationOrigin)
         {
-#if DEBUG
-            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
-            timer.Start();
-#endif
             this.surface = surface;
             surfaceTransform = surface.transform;
             Vector3 pitchAxis = surfaceTransform.rotation * Vector3.right;
@@ -134,8 +130,6 @@ namespace PitchPerfect
 
 #if DEBUG
             //Debug.LogFormat("Prop Initialized: {0}\tMax Lift:\t{1}\tZero Lift:\t{2}\tMax L/D:\t{3}", surface.part.partName, maxLiftDot, zeroLiftDot, maxLDDot);
-            timer.Stop();
-            Debug.LogFormat("Prop Initialize Time: {0}", timer.Elapsed.TotalMilliseconds);
 #endif
         }
 
