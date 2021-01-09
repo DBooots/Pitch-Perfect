@@ -1,4 +1,5 @@
-﻿using Accord.Math.Optimization;
+﻿using System;
+using Accord.Math.Optimization;
 using UnityEngine;
 
 namespace PitchPerfect
@@ -24,20 +25,22 @@ namespace PitchPerfect
             get => surfaceTransform.rotation * Vector3.right;
         }
 
-        public PropControlData(ModuleControlSurface surface, PropControlData basis)
+        private PropControlData(ModuleControlSurface surface) : this()
         {
             this.surface = surface;
             this.surfaceTransform = surface.transform;
+        }
+
+        public PropControlData(ModuleControlSurface surface, PropControlData basis) : this(surface)
+        {
             this.maxLiftDot = basis.maxLiftDot;
             this.maxLDDot = basis.maxLDDot;
             this.zeroLiftDot = basis.zeroLiftDot;
             this.proportionalDots = basis.proportionalDots;
         }
 
-        public PropControlData(ModuleControlSurface surface, Vector3 axis, Vector3 rotationOrigin)
+        public PropControlData(ModuleControlSurface surface, Vector3 axis, Vector3 rotationOrigin) : this(surface)
         {
-            this.surface = surface;
-            surfaceTransform = surface.transform;
             Vector3 pitchAxis = surfaceTransform.rotation * Vector3.right;
             surface.SetupCoefficients(Vector3.zero, out _, out Vector3 liftVector_0, out _, out _);
             Vector3 actionPoint = (surface.displaceVelocity ?
@@ -56,6 +59,15 @@ namespace PitchPerfect
                 return (lift * Vector3.Project(LiftVector, axis).magnitude) / (lift * Vector3.Project(Vector3.Cross(LiftVector, actionPoint.normalized), axis).magnitude + drag);
             }
 
+            InitializeDots(surface, ThrustFunc, EfficiencyFunc, out maxLiftDot, out maxLDDot, out zeroLiftDot, out proportionalDots);
+
+#if DEBUG
+            //Debug.LogFormat("Prop Initialized: {0}\tMax Lift:\t{1}\tZero Lift:\t{2}\tMax L/D:\t{3}", surface.part.partName, maxLiftDot, zeroLiftDot, maxLDDot);
+#endif
+        }
+
+        private static void InitializeDots(ModuleControlSurface surface, Func<double,double> thrustFunc, Func<double,double> efficiencyFunc, out float maxLiftDot, out float maxLDDot, out float zeroLiftDot, out float[] proportionalDots, float singleProportionalIndex = -1)
+        {
             float upperBound = 1, maxKeyValue = 0;
             for (int i = 0; i < surface.liftCurve.Curve.keys.Length; i++)
             {
@@ -67,7 +79,7 @@ namespace PitchPerfect
                 }
                 maxKeyValue = keyValue;
             }
-            BrentSearch ThrustSolver = new BrentSearch(ThrustFunc, 0, upperBound);
+            BrentSearch ThrustSolver = new BrentSearch(thrustFunc, 0, upperBound);
             proportionalDots = new float[proportionCount + 1];
             bool failedSolver = false;
             if (ThrustSolver.Maximize())
@@ -106,7 +118,7 @@ namespace PitchPerfect
                 //Debug.LogFormat("PropControl failed to resolve Thrust for {0} [{1}].", surface.part.partName, surface.vessel.parts.IndexOf(surface.part));
                 float maxLiftValue = 0;
                 maxLiftDot = 0;
-                for (int i = 0; i < surface.liftCurve.Curve.length; i ++)
+                for (int i = 0; i < surface.liftCurve.Curve.length; i++)
                 {
                     if (surface.liftCurve.Curve.keys[i].value > maxLiftValue)
                         maxLiftValue = surface.liftCurve.Curve.keys[i].value;
@@ -118,7 +130,7 @@ namespace PitchPerfect
                 zeroLiftDot = 0;
             }
 
-            BrentSearch EfficiencySolver = new BrentSearch(EfficiencyFunc, 0, maxLiftDot);
+            BrentSearch EfficiencySolver = new BrentSearch(efficiencyFunc, 0, maxLiftDot);
             if (EfficiencySolver.Maximize())
                 maxLDDot = (float)EfficiencySolver.Solution;
             else
@@ -127,10 +139,6 @@ namespace PitchPerfect
                 maxLDDot = maxLiftDot;
             }
             //Debug.LogFormat("PropControl Efficiency iterations: {0}", EfficiencySolver.Iterations);
-
-#if DEBUG
-            //Debug.LogFormat("Prop Initialized: {0}\tMax Lift:\t{1}\tZero Lift:\t{2}\tMax L/D:\t{3}", surface.part.partName, maxLiftDot, zeroLiftDot, maxLDDot);
-#endif
         }
 
         public float GetProportionalDot(float proportion)
