@@ -7,6 +7,8 @@ namespace PitchPerfect
 {
     public class ModulePropController : PartModule
     {
+        public static bool usePerfectMode;
+
         public enum PropControlMode
         {
             Off = 0,
@@ -216,7 +218,8 @@ namespace PitchPerfect
             }
             if (mode == PropControlMode.MaxEfficiency || mode == PropControlMode.MaxThrust || mode == PropControlMode.Proportional)
             {
-                InitSurfaces();
+                if (usePerfectMode)
+                    InitSurfaces();
                 SetBladeAngles();
             }
 
@@ -377,6 +380,11 @@ namespace PitchPerfect
         public override void OnAwake()
         {
             base.OnAwake();
+            ConfigNode settingsNode = GameDatabase.Instance.GetConfigNodes("PitchPerfectSettings").FirstOrDefault();
+            if (!bool.TryParse(settingsNode?.GetValue("usePerfectMode") ?? "False", out usePerfectMode))
+                usePerfectMode = false;
+            Debug.LogFormat("PropControl: {0}", usePerfectMode ? "Perfect Mode" : "Close Approximation");
+
             if (HighLogic.LoadedSceneIsFlight)
             {
                 GameEvents.OnEVAConstructionModePartAttached.Add(OnPartAttached);
