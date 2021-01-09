@@ -6,7 +6,7 @@ namespace PitchPerfect
 {
     public struct PropControlData
     {
-        private const int proportionCount = 10;
+        internal static int proportionCount = 10;
 
         public readonly ModuleControlSurface surface;
         public readonly Transform surfaceTransform;

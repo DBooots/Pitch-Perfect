@@ -381,8 +381,13 @@ namespace PitchPerfect
         {
             base.OnAwake();
             ConfigNode settingsNode = GameDatabase.Instance.GetConfigNodes("PitchPerfectSettings").FirstOrDefault();
-            if (!bool.TryParse(settingsNode?.GetValue("usePerfectMode") ?? "False", out usePerfectMode))
-                usePerfectMode = false;
+            if (settingsNode != null)
+            {
+                if (!bool.TryParse(settingsNode.GetValue("usePerfectMode"), out usePerfectMode))
+                    usePerfectMode = false;
+                if (int.TryParse(settingsNode.GetValue("proportionCount"), out int readValue))
+                    PropControlData.proportionCount = readValue;
+            }
             Debug.LogFormat("PropControl: {0}", usePerfectMode ? "Perfect Mode" : "Close Approximation");
 
             if (HighLogic.LoadedSceneIsFlight)
